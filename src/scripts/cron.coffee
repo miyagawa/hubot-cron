@@ -54,7 +54,8 @@ class Job
   constructor: (id, pattern, user, message) ->
     @id = id
     @pattern = pattern
-    @user = user
+    @envelope = {}
+    @envelope.user = user
     @message = message
 
   start: (robot) ->
@@ -67,8 +68,8 @@ class Job
     @cronjob.stop()
 
   serialize: ->
-    [@pattern, @user, @message]
+    [@pattern, @envelope, @message]
 
   sendMessage: (robot) ->
-    robot.send @user, @message
+    robot.send @envelope, @message
 
