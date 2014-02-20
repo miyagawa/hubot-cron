@@ -16,12 +16,9 @@ Add hubot-cron to your `package.json` dependencies.
 }
 ```
 
-Install it and put a symlink from your scripts directory.
+And also add it to `external-scripts.json`.
 
-```
-> npm install
-> ln -s ../node_modules/hubot-cron/src/scripts/cron.coffee scripts/
-```
+    ["hubot-cron"]
 
 ## Usage
 
