@@ -54,8 +54,8 @@ class Job
   constructor: (id, pattern, user, message) ->
     @id = id
     @pattern = pattern
-    @envelope = {}
-    @envelope.user = user
+    @envelope =
+      user: user
     @message = message
 
   start: (robot) ->
