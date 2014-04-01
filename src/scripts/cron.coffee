@@ -14,7 +14,7 @@ cronJob = require('cron').CronJob
 JOBS = {}
 
 createNewJob = (robot, pattern, user, message) ->
-  id = Math.floor(Math.random() * 1000000)
+  id = Math.floor(Math.random() * 1000000) while !id? || JOBS[id]
   job = registerNewJob robot, id, pattern, user, message
   robot.brain.data.cronjob[id] = job.serialize()
   id
