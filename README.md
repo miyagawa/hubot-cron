@@ -4,9 +4,7 @@ hubot-cron adds a cronjob system to hubot to schedule messages on a specific dat
 
 ## Installation
 
-Add `hubot-cron` to your package.json, run `npm install` and put a symlink from your `scripts` directory.
-
-## Usage
+Add `hubot-cron` to your package.json, run `npm install` and add hubot-cron to `external-scripts.json`.
 
 Add hubot-cron to your `package.json` dependencies.
 
@@ -16,11 +14,11 @@ Add hubot-cron to your `package.json` dependencies.
 }
 ```
 
-Install it and put a symlink from your scripts directory.
+Add `hubot-cron` to `external-scripts.json`.
 
 ```
-> npm install
-> ln -s ../node_modules/hubot-cron/src/scripts/cron.coffee scripts/
+> cat external-scripts.json
+> ["hubot-cron"]
 ```
 
 ## Usage
