@@ -1,7 +1,7 @@
 {
   "author": "Tatsuhiko Miyagawa",
   "name": "hubot-cron",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Cron job messaging for hubot",
   "homepage": "https://github.com/miyagawa/hubot-cron",
   "main": "./src/index.coffee",
