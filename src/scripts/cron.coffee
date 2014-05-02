@@ -55,7 +55,10 @@ class Job
     @id = id
     @pattern = pattern
     @envelope = {}
-    @envelope.user = user
+    # cloning user because adapter may touch it later
+    clonedUser = {}
+    clonedUser[k] = v for k,v of user
+    @envelope.user = clonedUser
     @message = message
 
   start: (robot) ->
