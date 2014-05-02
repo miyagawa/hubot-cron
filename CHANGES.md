@@ -1,3 +1,7 @@
+v0.2.1
+======
+* Fix a bug where reply_to is modified by adapters #6, #7 (@sorah)
+
 v0.2.0
 ======
 * Support external-scripts #1 (@francois2metz)
