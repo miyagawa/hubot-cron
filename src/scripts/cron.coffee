@@ -39,7 +39,7 @@ module.exports = (robot) ->
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
     for own id, job of robot.brain.data.cronjob
-      room = job[1].reply_to || job[1].room
+      room = job[1].reply_to || job[1].room || job[1].user.reply_to || job[1].user.room
       msg.send "#{id}: #{job[0]} @#{room} \"#{job[2]}\""
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
