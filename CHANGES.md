@@ -1,3 +1,7 @@
+v0.2.2
+======
+* Fix backward compatibility for jobs created in older version of this plugin #8 (TakatoshiMaeda)
+
 v0.2.1
 ======
 * Fix a bug where reply_to is modified by adapters #6, #7 (@sorah)
