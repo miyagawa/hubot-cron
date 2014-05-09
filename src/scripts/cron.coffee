@@ -20,7 +20,7 @@ createNewJob = (robot, pattern, user, message) ->
   id
 
 registerNewJobFromBrain = (robot, id, pattern, user, message) ->
-  # for jobs saved in v2.0.0..v2.0.2
+  # for jobs saved in v0.2.0..v0.2.2
   user = user.user if "user" of user
   registerNewJob(robot, id, pattern, user, message)
 
