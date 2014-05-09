@@ -3,6 +3,7 @@
 #
 # Commands:
 #   hubot new job "<crontab format>" <message> - Schedule a cron job to say something
+#   hubot new job <crontab format> "<message>" - Same, different quoting
 #   hubot list jobs - List current cron jobs
 #   hubot remove job <id> - remove job
 #

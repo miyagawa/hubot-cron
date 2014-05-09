@@ -24,7 +24,7 @@ Add `hubot-cron` to `external-scripts.json`.
 ## Usage
 
 ```
-miyagawa> hubot new job "0 9 * * 1-5" Good morning everyone!
+miyagawa> hubot new job 0 9 * * 1-5 "Good morning everyone!"
 hubot> Job 12345 created
 
 miyagawa> hubot list jobs
