@@ -52,6 +52,7 @@ module.exports = (robot) ->
     if JOBS[id]
       JOBS[id].stop()
       delete robot.brain.data.cronjob[id]
+      delete JOBS[id]
       msg.send "Job #{id} deleted"
     else
       msg.send "Job #{id} does not exist"
