@@ -1,3 +1,9 @@
+v0.2.4
+======
+* Accept `hubot new job * * * * * "message here"` as well (different quotes)
+* Only list jobs matching the current room
+* Fix some error handling
+
 v0.2.3
 ======
 * Fix a bug introduced in 0.2.0 where envelope user is not restored properly from brain storage #8, #9
