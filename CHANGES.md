@@ -1,3 +1,7 @@
+v0.2.3
+======
+* Fix a bug introduced in 0.2.0 where envelope user is not restored properly from brain storage #8, #9
+
 v0.2.2
 ======
 * Fix backward compatibility for jobs created in older version of this plugin #8 (TakatoshiMaeda)
