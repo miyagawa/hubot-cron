@@ -45,6 +45,9 @@ module.exports = (robot) ->
   robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
     handleNewJob robot, msg, msg.match[1], msg.match[2]
 
+  robot.respond /(?:new|add) job (.*) "(.*?)" *$/i, (msg) ->
+    handleNewJob robot, msg, msg.match[1], msg.match[2]
+
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
     for id, job of JOBS
       room = job.user.reply_to || job.user.room
