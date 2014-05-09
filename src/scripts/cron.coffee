@@ -43,9 +43,9 @@ module.exports = (robot) ->
       msg.send "Error caught parsing crontab pattern: #{error}. See http://crontab.org/ for the syntax"
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
-    for own id, job of robot.brain.data.cronjob
-      room = job[1].reply_to || job[1].room
-      msg.send "#{id}: #{job[0]} @#{room} \"#{job[2]}\""
+    for id, job of JOBS
+      room = job.user.reply_to || job.user.room
+      msg.send "#{id}: #{job.pattern} @#{room} \"#{job.message}\""
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
     id = msg.match[1]
