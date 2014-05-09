@@ -19,6 +19,11 @@ createNewJob = (robot, pattern, user, message) ->
   robot.brain.data.cronjob[id] = job.serialize()
   id
 
+registerNewJobFromBrain = (robot, id, pattern, user, message) ->
+  # for jobs saved in v0.2.0..v0.2.2
+  user = user.user if "user" of user
+  registerNewJob(robot, id, pattern, user, message)
+
 registerNewJob = (robot, id, pattern, user, message) ->
   JOBS[id] = new Job(id, pattern, user, message)
   JOBS[id].start(robot)
@@ -28,7 +33,7 @@ module.exports = (robot) ->
   robot.brain.data.cronjob or= {}
   robot.brain.on 'loaded', =>
     for own id, job of robot.brain.data.cronjob
-      registerNewJob robot, id, job[0], job[1], job[2]
+      registerNewJobFromBrain robot, id, job...
 
   robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
     try
@@ -38,15 +43,16 @@ module.exports = (robot) ->
       msg.send "Error caught parsing crontab pattern: #{error}. See http://crontab.org/ for the syntax"
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
-    for own id, job of robot.brain.data.cronjob
-      room = job[1].reply_to || job[1].room || job[1].user.reply_to || job[1].user.room
-      msg.send "#{id}: #{job[0]} @#{room} \"#{job[2]}\""
+    for id, job of JOBS
+      room = job.user.reply_to || job.user.room
+      msg.send "#{id}: #{job.pattern} @#{room} \"#{job.message}\""
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
     id = msg.match[1]
     if JOBS[id]
       JOBS[id].stop()
       delete robot.brain.data.cronjob[id]
+      delete JOBS[id]
       msg.send "Job #{id} deleted"
     else
       msg.send "Job #{id} does not exist"
@@ -55,11 +61,10 @@ class Job
   constructor: (id, pattern, user, message) ->
     @id = id
     @pattern = pattern
-    @envelope = {}
     # cloning user because adapter may touch it later
     clonedUser = {}
     clonedUser[k] = v for k,v of user
-    @envelope.user = clonedUser
+    @user = clonedUser
     @message = message
 
   start: (robot) ->
@@ -72,8 +77,9 @@ class Job
     @cronjob.stop()
 
   serialize: ->
-    [@pattern, @envelope, @message]
+    [@pattern, @user, @message]
 
   sendMessage: (robot) ->
-    robot.send @envelope, @message
+    envelope = user: @user
+    robot.send envelope, @message
 
