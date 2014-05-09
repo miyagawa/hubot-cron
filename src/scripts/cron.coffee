@@ -19,6 +19,11 @@ createNewJob = (robot, pattern, user, message) ->
   robot.brain.data.cronjob[id] = job.serialize()
   id
 
+registerNewJobFromBrain = (robot, id, pattern, user, message) ->
+  # for jobs saved in v2.0.0..v2.0.2
+  user = user.user if "user" of user
+  registerNewJob(robot, id, pattern, user, message)
+
 registerNewJob = (robot, id, pattern, user, message) ->
   JOBS[id] = new Job(id, pattern, user, message)
   JOBS[id].start(robot)
@@ -28,7 +33,7 @@ module.exports = (robot) ->
   robot.brain.data.cronjob or= {}
   robot.brain.on 'loaded', =>
     for own id, job of robot.brain.data.cronjob
-      registerNewJob robot, id, job[0], job[1], job[2]
+      registerNewJobFromBrain robot, id, job[0], job[1], job[2]
 
   robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
     try
@@ -39,7 +44,7 @@ module.exports = (robot) ->
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
     for own id, job of robot.brain.data.cronjob
-      room = job[1].reply_to || job[1].room || job[1].user.reply_to || job[1].user.room
+      room = job[1].reply_to || job[1].room
       msg.send "#{id}: #{job[0]} @#{room} \"#{job[2]}\""
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
@@ -55,11 +60,10 @@ class Job
   constructor: (id, pattern, user, message) ->
     @id = id
     @pattern = pattern
-    @envelope = {}
     # cloning user because adapter may touch it later
     clonedUser = {}
     clonedUser[k] = v for k,v of user
-    @envelope.user = clonedUser
+    @user = clonedUser
     @message = message
 
   start: (robot) ->
@@ -72,8 +76,9 @@ class Job
     @cronjob.stop()
 
   serialize: ->
-    [@pattern, @envelope, @message]
+    [@pattern, @user, @message]
 
   sendMessage: (robot) ->
-    robot.send @envelope, @message
+    envelope = user: @user
+    robot.send envelope, @message
 
