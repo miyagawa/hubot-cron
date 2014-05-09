@@ -2,8 +2,9 @@
 #   register cron jobs to schedule messages on the current channel
 #
 # Commands:
-#   hubot new job "<crontab format>" <message> - Schedule a cron job to say something
-#   hubot new job <crontab format> "<message>" - Same, different quoting
+#   hubot new job "<crontab format>" <message>   - Schedule a cron job to say something
+#   hubot new job <crontab format> "<message>"   - Ditto
+#   hubot new job <cronrab format> say <message> - Ditto
 #   hubot list jobs - List current cron jobs
 #   hubot remove job <id> - remove job
 #   hubot remove job with message <message> - remove with message
@@ -56,6 +57,9 @@ module.exports = (robot) ->
     handleNewJob robot, msg, msg.match[1], msg.match[2]
 
   robot.respond /(?:new|add) job (.*) "(.*?)" *$/i, (msg) ->
+    handleNewJob robot, msg, msg.match[1], msg.match[2]
+
+  robot.respond /(?:new|add) job (.*?) say (.*?) *$/i, (msg) ->
     handleNewJob robot, msg, msg.match[1], msg.match[2]
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
