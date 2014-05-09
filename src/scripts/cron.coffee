@@ -33,7 +33,7 @@ module.exports = (robot) ->
   robot.brain.data.cronjob or= {}
   robot.brain.on 'loaded', =>
     for own id, job of robot.brain.data.cronjob
-      registerNewJobFromBrain robot, id, job[0], job[1], job[2]
+      registerNewJobFromBrain robot, id, job...
 
   robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
     try
