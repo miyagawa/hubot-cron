@@ -7,4 +7,3 @@ module.exports = (robot) ->
     if exists
       for file in Fs.readdirSync(path)
         robot.loadFile path, file
-        robot.parseHelp Path.join(path, file)
