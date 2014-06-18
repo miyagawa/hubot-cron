@@ -6,6 +6,7 @@
 #   hubot new job <crontab format> "<message>" - Same, different quoting
 #   hubot list jobs - List current cron jobs
 #   hubot remove job <id> - remove job
+#   hubot remove job with message <message> - remove with message
 #
 # Author:
 #   miyagawa
@@ -29,6 +30,14 @@ registerNewJob = (robot, id, pattern, user, message) ->
   job = new Job(id, pattern, user, message)
   job.start(robot)
   JOBS[id] = job
+
+unregisterJob = (robot, id)->
+  if JOBS[id]
+    JOBS[id].stop()
+    delete robot.brain.data.cronjob[id]
+    delete JOBS[id]
+    return yes
+  no
 
 handleNewJob = (robot, msg, pattern, message) ->
   try
@@ -56,14 +65,17 @@ module.exports = (robot) ->
         msg.send "#{id}: #{job.pattern} @#{room} \"#{job.message}\""
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
-    id = msg.match[1]
-    if JOBS[id]
-      JOBS[id].stop()
-      delete robot.brain.data.cronjob[id]
-      delete JOBS[id]
+    if (id = msg.match[1]) and unregisterJob(robot, id)
       msg.send "Job #{id} deleted"
     else
       msg.send "Job #{id} does not exist"
+
+  robot.respond /(?:rm|remove|del|delete) job with message (.+)/i, (msg) ->
+    message = msg.match[1]
+    for id, job of JOBS
+      room = job.user.reply_to || job.user.room
+      if (room == msg.message.user.reply_to or room == msg.message.user.room) and job.message == message and unregisterJob(robot, id)
+        msg.send "Job #{id} deleted"
 
 class Job
   constructor: (id, pattern, user, message) ->
