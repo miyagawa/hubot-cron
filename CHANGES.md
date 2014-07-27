@@ -1,3 +1,10 @@
+v0.2.5
+======
+* Remove robot.parseHelp from index (ngs) #13
+* Add new command "remove job with message <message>" (ngs) #14
+* Add new syntax "new job <crontab> say <message>"
+* Fix errors with Slack adapter (deeeki) #15
+
 v0.2.4
 ======
 * Accept `hubot new job * * * * * "message here"` as well (different quotes)
