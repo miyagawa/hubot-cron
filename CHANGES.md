@@ -1,3 +1,7 @@
+v0.2.6
+======
+* `list jobs` will send the list in one text to avoid firing notifications on some adapters
+
 v0.2.5
 ======
 * Remove robot.parseHelp from index (ngs) #13
