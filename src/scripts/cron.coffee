@@ -67,7 +67,7 @@ module.exports = (robot) ->
     for id, job of JOBS
       room = job.user.reply_to || job.user.room
       if room == msg.message.user.reply_to or room == msg.message.user.room
-        text += "#{id}: #{job.pattern} @#{room} \"#{job.message}\"n"
+        text += "#{id}: #{job.pattern} @#{room} \"#{job.message}\"\n"
     msg.send text if text.length > 0
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
