@@ -52,6 +52,7 @@ module.exports = (robot) ->
   robot.brain.on 'loaded', =>
     for own id, job of robot.brain.data.cronjob
       registerNewJobFromBrain robot, id, job...
+  robot.brain.emit 'loaded' if Object.keys(robot.brain.data.cronjob).length
 
   robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
     handleNewJob robot, msg, msg.match[1], msg.match[2]
