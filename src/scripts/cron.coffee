@@ -22,13 +22,13 @@ createNewJob = (robot, pattern, user, message) ->
   robot.brain.data.cronjob[id] = job.serialize()
   id
 
-registerNewJobFromBrain = (robot, id, pattern, user, message) ->
+registerNewJobFromBrain = (robot, id, pattern, user, message, timezone) ->
   # for jobs saved in v0.2.0..v0.2.2
   user = user.user if "user" of user
-  registerNewJob(robot, id, pattern, user, message)
+  registerNewJob(robot, id, pattern, user, message, timezone)
 
-registerNewJob = (robot, id, pattern, user, message) ->
-  job = new Job(id, pattern, user, message)
+registerNewJob = (robot, id, pattern, user, message, timezone) ->
+  job = new Job(id, pattern, user, message, timezone)
   job.start(robot)
   JOBS[id] = job
 
@@ -46,6 +46,15 @@ handleNewJob = (robot, msg, pattern, message) ->
     msg.send "Job #{id} created"
   catch error
     msg.send "Error caught parsing crontab pattern: #{error}. See http://crontab.org/ for the syntax"
+
+updateJobTimezone = (robot, id, timezone) ->
+  if JOBS[id]
+    JOBS[id].stop()
+    JOBS[id].timezone = timezone
+    robot.brain.data.cronjob[id] = JOBS[id].serialize()
+    JOBS[id].start()
+    return yes
+  no
 
 module.exports = (robot) ->
   robot.brain.data.cronjob or= {}
@@ -83,9 +92,15 @@ module.exports = (robot) ->
       room = job.user.reply_to || job.user.room
       if (room == msg.message.user.reply_to or room == msg.message.user.room) and job.message == message and unregisterJob(robot, id)
         msg.send "Job #{id} deleted"
+  
+  robot.respond /(?:tz|timezone) job (\d+) (.*)/i, (msg) ->
+    if (id = msg.match[1]) and (timezone = msg.match[2]) and updateJobTimezone(robot, id, timezone)
+      msg.send "Job #{id} updated to use #{timezone}"
+    else
+      msg.send "Job #{id} does not exist"
 
 class Job
-  constructor: (id, pattern, user, message) ->
+  constructor: (id, pattern, user, message, timezone) ->
     @id = id
     @pattern = pattern
     # cloning user because adapter may touch it later
@@ -93,18 +108,19 @@ class Job
     clonedUser[k] = v for k,v of user
     @user = clonedUser
     @message = message
+    @timezone = timezone
 
   start: (robot) ->
     @cronjob = new cronJob(@pattern, =>
       @sendMessage robot
-    )
+    , null, false, @timezone)
     @cronjob.start()
 
   stop: ->
     @cronjob.stop()
 
   serialize: ->
-    [@pattern, @user, @message]
+    [@pattern, @user, @message, @timezone]
 
   sendMessage: (robot) ->
     envelope = user: @user, room: @user.room
