@@ -21,6 +21,10 @@ Add `hubot-cron` to `external-scripts.json`.
 > ["hubot-cron"]
 ```
 
+If you want to specify timezones, you'll need to install the [time](https://github.com/TooTallNate/node-time) module or place an entry for it in your package.json file.
+
+    npm install time
+
 ## Usage
 
 ```
@@ -32,11 +36,16 @@ hubot> (list of jobs)
 
 miyagawa> hubot rm job 12345
 hubot> Job 12345 removed
+
+miyagawa> hubot tz job 12345 America/Los_Angeles
+hubot> Job 12345 updated to use America/Los_Angeles
 ```
 
 You can use any [node-cron](https://github.com/ncb000gt/node-cron) compatible crontab format to schedule messages. Registered message will be sent to the same channel where you created a job.
 
 To persist the cron job in the hubot restart, you're recommended to use redis to persist Hubot brain.
+
+Timezones are specified in [tzdata format](https://en.wikipedia.org/wiki/Tz_database#Examples).
 
 ## See Also
 
