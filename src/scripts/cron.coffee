@@ -52,7 +52,7 @@ updateJobTimezone = (robot, id, timezone) ->
     JOBS[id].stop()
     JOBS[id].timezone = timezone
     robot.brain.data.cronjob[id] = JOBS[id].serialize()
-    JOBS[id].start()
+    JOBS[id].start(robot)
     return yes
   no
 
