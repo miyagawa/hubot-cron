@@ -2,9 +2,9 @@
 #   register cron jobs to schedule messages on the current channel
 #
 # Commands:
-#   hubot new job "<crontab format>" <message>   - Schedule a cron job to say something
-#   hubot new job <crontab format> "<message>"   - Ditto
-#   hubot new job <cronrab format> say <message> - Ditto
+#   hubot new job "<crontab format>" <message> - Schedule a cron job to say something
+#   hubot new job <crontab format> "<message>" - Ditto
+#   hubot new job <crontab format> say <message> - Ditto
 #   hubot list jobs - List current cron jobs
 #   hubot remove job <id> - remove job
 #   hubot remove job with message <message> - remove with message
@@ -92,7 +92,7 @@ module.exports = (robot) ->
       room = job.user.reply_to || job.user.room
       if (room == msg.message.user.reply_to or room == msg.message.user.room) and job.message == message and unregisterJob(robot, id)
         msg.send "Job #{id} deleted"
-  
+
   robot.respond /(?:tz|timezone) job (\d+) (.*)/i, (msg) ->
     if (id = msg.match[1]) and (timezone = msg.match[2]) and updateJobTimezone(robot, id, timezone)
       msg.send "Job #{id} updated to use #{timezone}"
