@@ -27,6 +27,15 @@ registerNewJobFromBrain = (robot, id, pattern, user, message, timezone) ->
   user = user.user if "user" of user
   registerNewJob(robot, id, pattern, user, message, timezone)
 
+  envelope = user: user, room: user.room
+  robot.send envelope, "Job #{id} registered from brain"
+
+storeJobToBrain = (robot, id, job) ->
+  robot.brain.data.cronjob[id] = job.serialize()
+
+  envelope = user: job.user, room: job.user.room
+  robot.send envelope, "Job #{id} stored in brain asynchronously"
+
 registerNewJob = (robot, id, pattern, user, message, timezone) ->
   job = new Job(id, pattern, user, message, timezone)
   job.start(robot)
@@ -56,12 +65,25 @@ updateJobTimezone = (robot, id, timezone) ->
     return yes
   no
 
+syncJobs = (robot) ->
+  nonCachedJobs = difference(robot.brain.data.cronjob, JOBS)
+  for own id, job of nonCachedJobs
+    registerNewJobFromBrain robot, id, job...
+
+  nonStoredJobs = difference(JOBS, robot.brain.data.cronjob)
+  for own id, job of nonStoredJobs
+    storeJobToBrain robot, id, job
+
+difference = (obj1, obj2) ->
+  diff = {}
+  for id, job of obj1
+    diff[id] = job if id !of obj2
+  return diff
+
 module.exports = (robot) ->
   robot.brain.data.cronjob or= {}
   robot.brain.on 'loaded', =>
-    for own id, job of robot.brain.data.cronjob
-      registerNewJobFromBrain robot, id, job...
-  robot.brain.emit 'loaded' if Object.keys(robot.brain.data.cronjob).length
+    syncJobs robot
 
   robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
     handleNewJob robot, msg, msg.match[1], msg.match[2]
