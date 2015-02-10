@@ -27,9 +27,6 @@ registerNewJobFromBrain = (robot, id, pattern, user, message, timezone) ->
   user = user.user if "user" of user
   registerNewJob(robot, id, pattern, user, message, timezone)
 
-  envelope = user: user, room: user.room
-  robot.send envelope, "Job #{id} registered from brain"
-
 storeJobToBrain = (robot, id, job) ->
   robot.brain.data.cronjob[id] = job.serialize()
 
