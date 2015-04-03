@@ -1,3 +1,7 @@
+v0.2.8
+======
+* support specifying timezone #20
+
 v0.2.7
 ======
 * Fixed to load brains correctly on hubot 2.7 or later (naoina) #19
