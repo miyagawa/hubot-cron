@@ -1,6 +1,10 @@
+v0.2.9
+======
+* Fixed job duplication #23
+
 v0.2.8
 ======
-* support specifying timezone #20
+* Support specifying timezone #20
 
 v0.2.7
 ======
