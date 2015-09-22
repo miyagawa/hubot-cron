@@ -97,6 +97,7 @@ module.exports = (robot) ->
       room = job.user.reply_to || job.user.room
       if room == msg.message.user.reply_to or room == msg.message.user.room
         text += "#{id}: #{job.pattern} @#{room} \"#{job.message}\"\n"
+    text = robot.adapter.removeFormatting text if robot.adapterName == 'slack'
     msg.send text if text.length > 0
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
