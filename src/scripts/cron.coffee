@@ -5,6 +5,7 @@
 #   hubot new job "<crontab format>" <message> - Schedule a cron job to say something
 #   hubot new job <crontab format> "<message>" - Ditto
 #   hubot new job <crontab format> say <message> - Ditto
+#   hubot new job <crontab format> exec <command> - Schedule a cron job to run a hubot command
 #   hubot list jobs - List current cron jobs
 #   hubot remove job <id> - remove job
 #   hubot remove job with message <message> - remove with message
@@ -12,20 +13,21 @@
 # Author:
 #   miyagawa
 
+TextMessage = require('hubot').TextMessage
 cronJob = require('cron').CronJob
 
 JOBS = {}
 
-createNewJob = (robot, pattern, user, message) ->
+createNewJob = (robot, pattern, user, message, exec = false) ->
   id = Math.floor(Math.random() * 1000000) while !id? || JOBS[id]
-  job = registerNewJob robot, id, pattern, user, message
+  job = registerNewJob robot, id, pattern, user, message, false, exec
   robot.brain.data.cronjob[id] = job.serialize()
   id
 
-registerNewJobFromBrain = (robot, id, pattern, user, message, timezone) ->
+registerNewJobFromBrain = (robot, id, pattern, user, message, timezone, exec = false) ->
   # for jobs saved in v0.2.0..v0.2.2
   user = user.user if "user" of user
-  registerNewJob(robot, id, pattern, user, message, timezone)
+  registerNewJob(robot, id, pattern, user, message, timezone, exec)
 
 storeJobToBrain = (robot, id, job) ->
   robot.brain.data.cronjob[id] = job.serialize()
@@ -33,8 +35,8 @@ storeJobToBrain = (robot, id, job) ->
   envelope = user: job.user, room: job.user.room
   robot.send envelope, "Job #{id} stored in brain asynchronously"
 
-registerNewJob = (robot, id, pattern, user, message, timezone) ->
-  job = new Job(id, pattern, user, message, timezone)
+registerNewJob = (robot, id, pattern, user, message, timezone, exec = false) ->
+  job = new Job(id, pattern, user, message, timezone, exec)
   job.start(robot)
   JOBS[id] = job
 
@@ -46,9 +48,9 @@ unregisterJob = (robot, id)->
     return yes
   no
 
-handleNewJob = (robot, msg, pattern, message) ->
+handleNewJob = (robot, msg, pattern, message, exec = false) ->
   try
-    id = createNewJob robot, pattern, msg.message.user, message
+    id = createNewJob robot, pattern, msg.message.user, message, exec
     msg.send "Job #{id} created"
   catch error
     msg.send "Error caught parsing crontab pattern: #{error}. See http://crontab.org/ for the syntax"
@@ -89,14 +91,19 @@ module.exports = (robot) ->
     handleNewJob robot, msg, msg.match[1], msg.match[2]
 
   robot.respond /(?:new|add) job (.*?) say (.*?) *$/i, (msg) ->
-    handleNewJob robot, msg, msg.match[1], msg.match[2]
+    handleNewJob robot, msg, msg.match[1], msg.match[2], false
+
+  robot.respond /(?:new|add) job (.*?) exec (.*?) *$/i, (msg) ->
+    handleNewJob robot, msg, msg.match[1], msg.match[2], true
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
     text = ''
     for id, job of JOBS
       room = job.user.reply_to || job.user.room
       if room == msg.message.user.reply_to or room == msg.message.user.room
-        text += "#{id}: #{job.pattern} @#{room} \"#{job.message}\"\n"
+        exectext = ''
+        exectext = ' (Execute)' if job.exec == true
+        text += "#{id}: #{job.pattern} @#{room} \"#{job.message}\"#{exectext}\n"
     text = robot.adapter.removeFormatting text if robot.adapterName == 'slack'
     msg.send text if text.length > 0
 
@@ -120,7 +127,7 @@ module.exports = (robot) ->
       msg.send "Job #{id} does not exist"
 
 class Job
-  constructor: (id, pattern, user, message, timezone) ->
+  constructor: (id, pattern, user, message, timezone, exec = false) ->
     @id = id
     @pattern = pattern
     # cloning user because adapter may touch it later
@@ -129,6 +136,7 @@ class Job
     @user = clonedUser
     @message = message
     @timezone = timezone
+    @exec = exec
 
   start: (robot) ->
     @cronjob = new cronJob(@pattern, =>
@@ -140,9 +148,11 @@ class Job
     @cronjob.stop()
 
   serialize: ->
-    [@pattern, @user, @message, @timezone]
+    [@pattern, @user, @message, @timezone, @exec]
 
   sendMessage: (robot) ->
     envelope = user: @user, room: @user.room
-    robot.send envelope, @message
-
+    if @exec
+      robot.receive new TextMessage(@user, @message)
+    else
+      robot.send envelope, @message

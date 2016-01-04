@@ -47,6 +47,21 @@ To persist the cron job in the hubot restart, you're recommended to use redis to
 
 Timezones are specified in [tzdata format](https://en.wikipedia.org/wiki/Tz_database#Examples).
 
+
+### Scheduling Tasks
+You can schedule Hubot to run hubot tasks / commands / plugins by using the `exec` function to `hubot-cron`
+
+```
+miyagawa> hubot new job 0 9 * * 1-5 exec hubot ping
+hubot> Job 45678 created
+
+...
+
+hubot> PONG
+```
+
+This will send the string `hubot ping` to hubot at the specified time and will be processed by hubot.
+
 ## See Also
 
 `reminder.coffee` in hubot-scripts.
