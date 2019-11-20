@@ -16,16 +16,16 @@ cronJob = require('cron').CronJob
 
 JOBS = {}
 
-createNewJob = (robot, pattern, user, message) ->
+createNewJob = (robot, pattern, user, message, eventjob) ->
   id = Math.floor(Math.random() * 1000000) while !id? || JOBS[id]
-  job = registerNewJob robot, id, pattern, user, message
+  job = registerNewJob robot, id, pattern, user, message, eventjob
   robot.brain.data.cronjob[id] = job.serialize()
   id
 
-registerNewJobFromBrain = (robot, id, pattern, user, message, timezone) ->
+registerNewJobFromBrain = (robot, id, pattern, user, message, eventjob, timezone) ->
   # for jobs saved in v0.2.0..v0.2.2
   user = user.user if "user" of user
-  registerNewJob(robot, id, pattern, user, message, timezone)
+  registerNewJob(robot, id, pattern, user, message, eventjob, timezone)
 
 storeJobToBrain = (robot, id, job) ->
   robot.brain.data.cronjob[id] = job.serialize()
@@ -33,8 +33,8 @@ storeJobToBrain = (robot, id, job) ->
   envelope = user: job.user, room: job.user.room
   robot.send envelope, "Job #{id} stored in brain asynchronously"
 
-registerNewJob = (robot, id, pattern, user, message, timezone) ->
-  job = new Job(id, pattern, user, message, timezone)
+registerNewJob = (robot, id, pattern, user, message, eventjob, timezone) ->
+  job = new Job(id, pattern, user, message, eventjob, timezone)
   job.start(robot)
   JOBS[id] = job
 
@@ -46,9 +46,9 @@ unregisterJob = (robot, id)->
     return yes
   no
 
-handleNewJob = (robot, msg, pattern, message) ->
+handleNewJob = (robot, msg, pattern, message, eventjob) ->
   try
-    id = createNewJob robot, pattern, msg.message.user, message
+    id = createNewJob robot, pattern, msg.message.user, message, eventjob
     msg.send "Job #{id} created"
   catch error
     msg.send "Error caught parsing crontab pattern: #{error}. See http://crontab.org/ for the syntax"
@@ -83,21 +83,29 @@ module.exports = (robot) ->
     syncJobs robot
 
   robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
-    handleNewJob robot, msg, msg.match[1], msg.match[2]
+    handleNewJob robot, msg, msg.match[1], msg.match[2], false
 
   robot.respond /(?:new|add) job (.*) "(.*?)" *$/i, (msg) ->
-    handleNewJob robot, msg, msg.match[1], msg.match[2]
+    handleNewJob robot, msg, msg.match[1], msg.match[2], false
 
   robot.respond /(?:new|add) job (.*?) say (.*?) *$/i, (msg) ->
-    handleNewJob robot, msg, msg.match[1], msg.match[2]
+    handleNewJob robot, msg, msg.match[1], msg.match[2], false
+
+  robot.respond /(?:nevent) job "(.*?)" (.*)$/i, (msg) ->
+    handleNewJob robot, msg, msg.match[1], msg.match[2], true
+
+  robot.respond /(?:nevent) job (.*) "(.*?)" *$/i, (msg) ->
+    handleNewJob robot, msg, msg.match[1], msg.match[2], true
+
+  robot.respond /(?:nevent) job (.*?) say (.*?) *$/i, (msg) ->
+    handleNewJob robot, msg, msg.match[1], msg.match[2], true
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
     text = ''
     for id, job of JOBS
       room = job.user.reply_to || job.user.room
       if room == msg.message.user.reply_to or room == msg.message.user.room
-        text += "#{id}: #{job.pattern} @#{room} \"#{job.message}\"\n"
-    text = robot.adapter.removeFormatting text if robot.adapterName == 'slack'
+        text += "#{id}: #{job.pattern} event: #{job.eventjob}, #{if room? then '@'+room else 'No Specific Room'} \"#{job.message}\"\n"
     msg.send text if text.length > 0
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
@@ -120,7 +128,7 @@ module.exports = (robot) ->
       msg.send "Job #{id} does not exist"
 
 class Job
-  constructor: (id, pattern, user, message, timezone) ->
+  constructor: (id, pattern, user, message, eventjob, timezone) ->
     @id = id
     @pattern = pattern
     # cloning user because adapter may touch it later
@@ -129,20 +137,30 @@ class Job
     @user = clonedUser
     @message = message
     @timezone = timezone
+    @eventjob = eventjob
 
   start: (robot) ->
-    @cronjob = new cronJob(@pattern, =>
-      @sendMessage robot
-    , null, false, @timezone)
-    @cronjob.start()
+    if @eventjob
+      @cronjob = new cronJob(@pattern, =>
+        @doJobEvent robot
+      , null, false, @timezone)
+      @cronjob.start()
+    else
+      @cronjob = new cronJob(@pattern, =>
+        @sendMessage robot
+      , null, false, @timezone)
+      @cronjob.start()
 
   stop: ->
     @cronjob.stop()
 
   serialize: ->
-    [@pattern, @user, @message, @timezone]
+    [@pattern, @user, @message, @eventjob, @timezone]
 
   sendMessage: (robot) ->
     envelope = user: @user, room: @user.room
     robot.send envelope, @message
+
+  doJobEvent: (robot) ->
+    robot.emit @message
 
